@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+gunicorn
+boto3
+numpy
+av
+transformers
+pillow
+python-multipart

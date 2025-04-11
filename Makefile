@@ -4,9 +4,9 @@ install:
 
 
 deploy:
-	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 354918363202.dkr.ecr.us-east-1.amazonaws.com
-	docker build -t wikipedia .
-	docker tag wikipedia:latest 354918363202.dkr.ecr.us-east-1.amazonaws.com/wikipedia:latest
-	docker push 354918363202.dkr.ecr.us-east-1.amazonaws.com/wikipedia:latest
+	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 318489830920.dkr.ecr.us-east-1.amazonaws.com
+	docker build -t video-summarization .
+	docker tag video-summarization:latest 318489830920.dkr.ecr.us-east-1.amazonaws.com/video-summarization:latest
+	docker push 318489830920.dkr.ecr.us-east-1.amazonaws.com/video-summarization:latest
 	
-all: install test lint format deploy
+all: install  deploy

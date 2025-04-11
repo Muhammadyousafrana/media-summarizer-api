@@ -17,7 +17,7 @@ def read_video_pyav(container, indices):
 
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
-def process_video(video_path, num_frames=8):
+def process_video(video_path, num_frames=4):
     container = av.open(video_path)
     total_frames = container.streams.video[0].frames
     indices = np.arange(0, total_frames, total_frames / num_frames).astype(int)
@@ -28,7 +28,7 @@ def process_video(video_path, num_frames=8):
     np.save(frame_bytes, clip, allow_pickle=False)
     return base64.b64encode(frame_bytes.getvalue()).decode("utf-8")
 
-def process_image_as_video(image_path, num_frames=8):
+def process_image_as_video(image_path, num_frames=2):
     image = Image.open(image_path).convert("RGB")
     image_array = np.array(image)
     video_frames = np.repeat(image_array[np.newaxis, ...], num_frames, axis=0)

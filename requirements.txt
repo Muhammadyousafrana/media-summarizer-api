@@ -7,3 +7,4 @@ av
 transformers
 pillow
 python-multipart
+torch

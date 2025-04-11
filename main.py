@@ -5,7 +5,7 @@ import json
 import boto3
 import tempfile
 from transformers import LlavaNextVideoProcessor
-from my_lib.video_preprocessing import process_video, process_image_as_video
+from my_lib.video_preproces import process_video, process_image_as_video
 
 app = FastAPI()
 
@@ -52,7 +52,7 @@ async def summarize_media(
         compressed_payload = gzip.compress(json.dumps(payload).encode("utf-8"))
 
         response = runtime.invoke_endpoint(
-            EndpointName=ENDPOINT_NAME,
+            EndpointName="huggingface-pytorch-inference-2025-04-11-13-13-58-931",
             ContentType="application/gzip",
             Body=compressed_payload,
         )

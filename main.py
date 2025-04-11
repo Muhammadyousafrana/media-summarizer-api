@@ -63,6 +63,11 @@ def process_image_as_video(image_path, num_frames=8):
     return base64.b64encode(frame_bytes.getvalue()).decode("utf-8")
 
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Summarization API. Use /summarize/text to summarize text. and use /summarize/file to summarize the file"}
+
+
 @app.post("/summarize/")
 async def summarize_media(
     file: UploadFile = File(...),

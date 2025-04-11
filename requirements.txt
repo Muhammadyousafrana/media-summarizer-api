@@ -8,3 +8,5 @@ transformers
 pillow
 python-multipart
 torch
+protobuf
+sentencepiece

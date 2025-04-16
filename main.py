@@ -23,7 +23,7 @@ runtime = boto3.client(
 
 # Load once
 processor = LlavaNextVideoProcessor.from_pretrained("llava-hf/LLaVA-NeXT-Video-7B-hf")
-ENDPOINT_NAME = "huggingface-pytorch-inference-2025-04-11-13-13-58-931"
+ENDPOINT_NAME = "huggingface-pytorch-inference-2025-04-16-08-09-32-393"
 
 
 # Process video (similar to Jupyter notebook)

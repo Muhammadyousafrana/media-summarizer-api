@@ -1,51 +1,49 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 import gzip
 import json
 import boto3
 import tempfile
-import base64
-import io
-import numpy as np
-from PIL import Image
 from transformers import LlavaNextVideoProcessor
 from my_lib.video_preproces import read_video_pyav, process_video, process_image_as_video
 
 app = FastAPI()
 
-# Use explicit credentials here
+# Explicit AWS credentials (consider moving to env vars or IAM roles in production)
 runtime = boto3.client(
     "sagemaker-runtime",
-    region_name="us-east-1",  # Your region
-    aws_access_key_id="AKIAUUJ3ZEYEARBUC7K6",  # Replace with your access key
-    aws_secret_access_key="BNxk6vbLhroI5igwSljr1sdYOs2gNjhh79aOZqEv"  # Replace with your secret key
+    region_name="us-east-1",
+    aws_access_key_id="AKIAUUJ3ZEYEARBUC7K6",
+    aws_secret_access_key="BNxk6vbLhroI5igwSljr1sdYOs2gNjhh79aOZqEv"
 )
 
-# Load once
+# Load processor once
 processor = LlavaNextVideoProcessor.from_pretrained("llava-hf/LLaVA-NeXT-Video-7B-hf")
-ENDPOINT_NAME = "huggingface-pytorch-inference-2025-04-16-08-09-32-393"
-
+ENDPOINT_NAME = "huggingface-pytorch-inference-2025-04-17-14-30-52-638"
 
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Summarization API. Use /summarize/text to summarize text. and use /summarize/file to summarize the file"}
+    return {"message": "Welcome to the Summarization API. Use /summarize to summarize media files."}
 
 
 @app.post("/summarize/")
-async def summarize_media(
-    file: UploadFile = File(...),
-    is_image: bool = Form(False)
-):
+async def summarize_media(file: UploadFile = File(...)):
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        if is_image:
+        # Detect MIME type
+        if file.content_type.startswith("image/"):
             compressed_frames = process_image_as_video(tmp_path)
-        else:
+        elif file.content_type.startswith("video/"):
             compressed_frames = process_video(tmp_path)
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Unsupported file type: {file.content_type}"}
+            )
 
         conversation = [
             {
@@ -62,7 +60,7 @@ async def summarize_media(
         payload = {
             "prompt": prompt,
             "video_frames": compressed_frames,
-            "max_new_tokens": 512
+            "max_new_tokens": 1024
         }
 
         compressed_payload = gzip.compress(json.dumps(payload).encode("utf-8"))
@@ -74,7 +72,7 @@ async def summarize_media(
         )
 
         result = response["Body"].read().decode("utf-8")
-        return JSONResponse(content={"summary": result})
-    
+        return JSONResponse(content={"summary": result[0][2:]})
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})

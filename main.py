@@ -9,7 +9,7 @@ import io
 import numpy as np
 from PIL import Image
 from transformers import LlavaNextVideoProcessor
-import av
+from my_lib.video_preproces import read_video_pyav, process_video, process_image_as_video
 
 app = FastAPI()
 
@@ -25,42 +25,6 @@ runtime = boto3.client(
 processor = LlavaNextVideoProcessor.from_pretrained("llava-hf/LLaVA-NeXT-Video-7B-hf")
 ENDPOINT_NAME = "huggingface-pytorch-inference-2025-04-16-08-09-32-393"
 
-
-# Process video (similar to Jupyter notebook)
-def read_video_pyav(container, indices):
-    frames = []
-    container.seek(0)
-    start_index, end_index = indices[0], indices[-1]
-    for i, frame in enumerate(container.decode(video=0)):
-        if i > end_index:
-            break
-        if i >= start_index and i in indices:
-            frames.append(frame)
-    return np.stack([x.to_ndarray(format="rgb24") for x in frames])
-
-
-def process_video(video_path, num_frames=8):
-    container = av.open(video_path)
-    total_frames = container.streams.video[0].frames
-    indices = np.arange(0, total_frames, total_frames / num_frames).astype(int)
-    
-    clip = read_video_pyav(container, indices)
-
-    # Convert numpy array to base64 string
-    frame_bytes = io.BytesIO()
-    np.save(frame_bytes, clip, allow_pickle=False)
-    return base64.b64encode(frame_bytes.getvalue()).decode("utf-8")
-
-
-# Process image as video (similar to Jupyter notebook)
-def process_image_as_video(image_path, num_frames=8):
-    image = Image.open(image_path).convert("RGB")
-    image_array = np.array(image)
-    video_frames = np.repeat(image_array[np.newaxis, ...], num_frames, axis=0)
-
-    frame_bytes = io.BytesIO()
-    np.save(frame_bytes, video_frames, allow_pickle=False)
-    return base64.b64encode(frame_bytes.getvalue()).decode("utf-8")
 
 
 @app.get("/")

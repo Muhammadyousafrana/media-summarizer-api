@@ -52,7 +52,6 @@ async def summarize_media(file: UploadFile = File(...)):
             try:
                 compressed_frames = process_video(tmp_path)
                 prompt_text = "summarize this video and explain the key highlights"
-                media_type = "video"
             except Exception as ve:
                 logger.error(f"Error processing video: {ve}")
                 logger.debug(traceback.format_exc())
@@ -64,7 +63,6 @@ async def summarize_media(file: UploadFile = File(...)):
             try:
                 compressed_frames = process_image_as_video(tmp_path)
                 prompt_text = "describe the image and summarize its content"
-                media_type = "image"
             except Exception as ie:
                 logger.error(f"Error processing image: {ie}")
                 logger.debug(traceback.format_exc())
@@ -78,7 +76,7 @@ async def summarize_media(file: UploadFile = File(...)):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt_text},
-                    {"type": media_type},
+                    {"type": "video"},
                 ],
             },
         ]

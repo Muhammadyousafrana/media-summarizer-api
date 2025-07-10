@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from fastapi.logger import logger
@@ -16,13 +17,13 @@ app = FastAPI()
 runtime = boto3.client(
     "sagemaker-runtime",
     region_name="us-east-1",
-    aws_access_key_id="AKIAUUJ3ZEYEARBUC7K6",
-    aws_secret_access_key="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"
+    aws_access_key_id=os.getenv("aws_access_key_id"),
+    aws_secret_access_key=os.getenv("aws_secret_access_key")
 )
 
 # Load processor once
 processor = LlavaNextVideoProcessor.from_pretrained("llava-hf/LLaVA-NeXT-Video-7B-hf")
-ENDPOINT_NAME = "huggingface-pytorch-inference-2025-04-17-14-30-52-638"
+ENDPOINT_NAME = os.getenv("endpoint")
 
 
 @app.get("/")

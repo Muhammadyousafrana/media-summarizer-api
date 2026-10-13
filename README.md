@@ -1,148 +1,143 @@
-# Video Summarization
+# Media Summarizer API
 
-A Python-based service for automatic video and image summarization. This project extracts key frames from videos and leverages the Llava Next Video 7B HF model to generate meaningful summaries of the content. It also supports image summarization.
+A FastAPI service for summarizing uploaded videos and images using a vision-language model deployed through AWS SageMaker.
+
+This project is designed for multimodal summarization: it extracts key frames from videos and sends them, along with a prompt, to the LLaVA-NeXT-Video model for summary generation. It also supports image summarization.
+
+## Recommended repository name
+
+The current repo name, `video_summarization`, works, but it is a little narrow because the application also supports image summarization.
+
+A more appropriate and professional name would be:
+
+- `media-summarizer-api`
+
+Other good alternatives:
+- `video-image-summarizer`
+- `multimodal-summarizer-api`
+- `video-summarizer-service`
 
 ## Features
 
-- **Video Summarization:**  
-  Extracts key frames from uploaded videos and summarizes the video’s content using a state-of-the-art vision-language model.
+- Summarize uploaded videos
+- Summarize uploaded images
+- REST API for integration with web or mobile apps
+- Uses key-frame extraction for efficient video processing
+- Runs with FastAPI and AWS SageMaker inference
 
-- **Image Summarization:**  
-  Summarizes the content of uploaded images.
+## Tech stack
 
-- **REST API:**  
-  Easy integration via HTTP POST requests for both video and image summarization.
+- Python
+- FastAPI
+- OpenCV / PyAV for video frame extraction
+- Hugging Face LLaVA-NeXT-Video-7B
+- AWS SageMaker Runtime
+- Docker
 
-## How It Works
+## Project structure
 
-1. **Video Processing:**  
-   - Key frames are extracted from the input video.
-   - The extracted frames are passed to the Llava Next Video 7B HF model.
-   - The model generates a natural language summary of the video.
-
-2. **Image Processing:**  
-   - The image is sent directly to the model for summarization.
-
-## Tech Stack
-
-- **Python** (88.1%)
-- **Makefile** (7.1%)
-- **Dockerfile** (4.8%)
-- **Llava Next Video 7B HF** (HuggingFace Vision-Language Model)
-- **FastAPI** (or similar, assumed for REST API)
-- **OpenCV** (assumed for key frame extraction)
+```text
+.
+├── main.py
+├── my_lib/
+│   └── video_preproces.py
+├── requirements.txt
+├── Dockerfile
+├── heroku.yml
+├── Makefile
+├── buildspec.yml
+├── README.md
+├── LICENSE
+├── .gitignore
+└── .dockerignore
+```
 
 ## Installation
 
-**1. Clone the repository:**
+1. Clone the repository:
+
 ```bash
 git clone https://github.com/Muhammadyousafrana/video_summarization.git
 cd video_summarization
 ```
 
-**2. (Optional) Set up a virtual environment:**
+2. Create a virtual environment (optional but recommended):
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-**3. Install dependencies:**
+3. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-**4. (Optional) Run with Docker:**
-```bash
-docker build -t video_summarization .
-docker run -p 80:80 video_summarization
-```
-
-## Usage
-
-### API Endpoints
-
-#### 1. Video Summarization
+4. Set required environment variables for AWS SageMaker:
 
 ```bash
-curl -X 'POST' \
-  'http://<host>:<port>/summarize/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@your_video.mp4;type=video/mp4' \
-  -F 'is_image=false'
+export aws_access_key_id="your_key"
+export aws_secret_access_key="your_secret"
+export endpoint="your_sagemaker_endpoint_name"
 ```
 
-#### 2. Image Summarization
+5. Run the app:
 
 ```bash
-curl -X 'POST' \
-  'http://<host>:<port>/summarize/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@your_image.png;type=image/png' \
-  -F 'is_image=true'
+uvicorn main:app --reload
 ```
 
-- Replace `<host>:<port>` with your deployed server address (e.g., `localhost:80`).
+## API usage
 
-### API Response
+### Summarize a video or image
 
-A successful response returns a JSON object containing a summary, e.g.:
+Send a multipart form request to `/summarize` with:
+- `file`: uploaded video or image
+- `content-type`: automatically detected from the uploaded file
+
+#### Example for video
+
+```bash
+curl -X POST "http://localhost:8000/summarize" \
+  -H "accept: application/json" \
+  -F "file=@example_video.mp4;type=video/mp4"
+```
+
+#### Example for image
+
+```bash
+curl -X POST "http://localhost:8000/summarize" \
+  -H "accept: application/json" \
+  -F "file=@example_image.png;type=image/png"
+```
+
+### Response format
 
 ```json
 {
-  "summary": "This video explains how logos can enhance your personal brand..."
+  "summary": "This video explains..."
 }
 ```
 
-## Example
+## How it works
 
-#### Video Example
-```bash
-curl -X 'POST' \
-  'https://urban-robot-wp5r679rgwvcrjv-80.app.github.dev/summarize/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@example_video.mp4;type=video/mp4' \
-  -F 'is_image=false'
-```
+1. The uploaded file is checked to see whether it is a video or image.
+2. For video input, key frames are extracted.
+3. Frames are converted into a model-compatible format.
+4. The LLaVA-NeXT-Video model generates a summary.
+5. The summary is returned as a JSON response.
 
-#### Image Example
-```bash
-curl -X 'POST' \
-  'https://urban-robot-wp5r679rgwvcrjv-80.app.github.dev/summarize/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@example_image.png;type=image/png' \
-  -F 'is_image=true'
-```
+## Notes
 
-## Configuration
-
-- **Model:** Llava Next Video 7B HF (ensure access to the HuggingFace model)
-- **Environment variables:**  
-  - See `.env.example` (if provided)
-- **Key frame extraction:** Adjust extraction parameters in the config or code as needed.
-
-## Requirements
-
-- Python 3.8+
-- See `requirements.txt` for full Python dependencies
-- Docker (optional, for containerized deployment)
-
-## Contributing
-
-1. Fork the repository.
-2. Create your feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -am 'Add new feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a pull request.
+- This project is more of a functional prototype/demo than a fully production-hardened service.
+- AWS credentials should ideally be managed using IAM roles or a secure environment secret manager.
+- Model and deployment configuration should be validated for production use.
 
 ## License
 
-[MIT License](LICENSE) (or specify your license)
+This project is licensed under the MIT License.
 
-## Contact
+## Author
 
-- Author: Muhammadyousafrana
-- GitHub: [Muhammadyousafrana](https://github.com/Muhammadyousafrana)
+Muhammadyousafrana
